@@ -1,0 +1,8 @@
+# Cheatsheet
+Some sample commands:
+```
+addFile_/home/adlrocha/Desktop/main/work/ProtocolLabs/repos/ipfs/ipfs-lite/functions/simple.wasm
+add_sample string
+call_bafybeidob3ooeaysa3x3ahwwgzwkzcqiiegxb33jul53xpsl3vyeqmkmey_bafybeidmpg3lhlc6s2eaz4xvbgczpfiefgiq6bere2wrjgqejd4vbfwqhm
+get_bafybeibnvyqswv6kpj3z64ch5g7iigo2hvlqpfqnrwbw42fidxipijvzna
+```

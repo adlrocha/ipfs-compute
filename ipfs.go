@@ -3,14 +3,17 @@
 package ipfslite
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/bytecodealliance/wasmtime-go"
 	"github.com/ipfs/go-bitswap"
 	"github.com/ipfs/go-bitswap/network"
 	blockservice "github.com/ipfs/go-blockservice"
@@ -77,6 +80,8 @@ type Peer struct {
 	bstore          blockstore.Blockstore
 	bserv           blockservice.BlockService
 	reprovider      provider.System
+
+	runtime *wasmtime.Store
 }
 
 // New creates an IPFS-Lite Peer. It uses the given datastore, libp2p Host and
@@ -124,9 +129,20 @@ func New(
 		return nil, err
 	}
 
+	p.setupRuntime()
+
 	go p.autoclose()
 
 	return p, nil
+}
+
+func (p *Peer) setupRuntime() {
+	p.runtime = wasmtime.NewStore(wasmtime.NewEngine())
+}
+
+// Runtime return the peer's WASM runtime
+func (p *Peer) Runtime() *wasmtime.Store {
+	return p.runtime
 }
 
 func (p *Peer) setupBlockstore() error {
@@ -236,6 +252,11 @@ func (p *Peer) Bootstrap(peers []peer.AddrInfo) {
 	}
 }
 
+// ConnectPeer using AddrInfo.
+func (p *Peer) ConnectPeer(peer peer.AddrInfo) error {
+	return p.host.Connect(p.ctx, peer)
+}
+
 // Session returns a session-based NodeGetter.
 func (p *Peer) Session(ctx context.Context) ipld.NodeGetter {
 	ng := merkledag.NewSession(ctx, p.DAGService)
@@ -328,4 +349,77 @@ func (p *Peer) BlockStore() blockstore.Blockstore {
 // a shorthand for .Blockstore().Has().
 func (p *Peer) HasBlock(c cid.Cid) (bool, error) {
 	return p.BlockStore().Has(c)
+}
+
+// Deploy a resource to the network.
+func (p *Peer) Deploy(ctx context.Context, bytecode []byte) (cid.Cid, error) {
+	// TODO: Add an IPLD DAG instead of chunking files directly.
+	root, err := p.AddFile(ctx, bytes.NewReader(bytecode), &AddParams{})
+	return root.Cid(), err
+}
+
+// Call a function deployed in the network
+func (p *Peer) Call(ctx context.Context, fnCid cid.Cid, argsCid []cid.Cid) (*cid.Cid, error) {
+
+	cids := append([]cid.Cid{fnCid}, argsCid...)
+	data := make([][]byte, 0)
+
+	// Get the required data from the network.
+	for _, c := range cids {
+		rsc, err := p.GetFile(ctx, c)
+		if err != nil {
+			return nil, err
+		}
+		defer rsc.Close()
+		d, err := ioutil.ReadAll(rsc)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, d)
+	}
+
+	module, err := wasmtime.NewModule(p.runtime.Engine, data[0])
+
+	instance, err := wasmtime.NewInstance(p.runtime, module, []*wasmtime.Extern{})
+	if err != nil {
+		return nil, err
+	}
+
+	call32 := func(f *wasmtime.Func, args ...interface{}) int32 {
+		ret, _ := f.Call(args...)
+		// check(err)
+		return ret.(int32)
+	}
+	memory := instance.GetExport("memory").Memory()
+	alloc := instance.GetExport("alloc").Func()
+	// TODO: We need to state the ABI of the function somewhere.
+	// Here is where IPLD comes into place.
+	fx := instance.GetExport("fx").Func()
+	// TODO: We need to allocate enough memory for the output.
+	// Stating it in the ABI may be a good way.
+	a := call32(alloc, 100)
+	buf := memory.UnsafeData()
+
+	// TODO: We need to allocate enough memory for the output.
+	// Stating it in the ABI may be a good way.
+	input := data[1]
+
+	// Allocate in string
+	for i, k := range input {
+		buf[int(a)+i] = k
+	}
+
+	b := call32(fx, a, len(input))
+	// fmt.Println("Result: ", a)
+	// fmt.Println("Output:", string(buf[a:a+b]))
+
+	// Put in the CID
+
+	// Deploy cid for argument
+	outputCid, err := p.Deploy(ctx, buf[a:a+b])
+	if err != nil {
+		return nil, err
+	}
+	return &outputCid, nil
+
 }

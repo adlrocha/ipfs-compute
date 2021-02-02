@@ -1,4 +1,5 @@
-# IPFS-Lite
+# IPFS Compute: Run your CID!
+> IPFS-lite node with an embedded WASM runtime
 
 <p align="center">
 <img src="logo.png" alt="ipfs-lite" title="ipfs-lite" />

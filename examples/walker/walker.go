@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	ipfslite "github.com/adlrocha/ipfs-lite"
 	"github.com/awalterschulze/gographviz"
-	ipfslite "github.com/hsanjuan/ipfs-lite"
 	"github.com/ipfs/go-cid"
 	format "github.com/ipfs/go-ipld-format"
 	"github.com/ipfs/go-log/v2"
