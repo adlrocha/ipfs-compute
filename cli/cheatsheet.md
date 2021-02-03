@@ -8,3 +8,8 @@ call_bafybeidr5pcwuwabxijhaesevja6ji5y7izxy2grgvohndaz2lcdwvoh3a_bafybeigft6kody
 get_bafybeifxbaroablgiucsnahwd7jjyrabwx6nbm6w27g33rf7qgrm53bwsi
 call_bafybeidr5pcwuwabxijhaesevja6ji5y7izxy2grgvohndaz2lcdwvoh3a_bafybeifxbaroablgiucsnahwd7jjyrabwx6nbm6w27g33rf7qgrm53bwsi
 ```
+
+```
+deploy_/home/adlrocha/Desktop/main/work/ProtocolLabs/repos/ipruntime/ipfs-computation/functions/wordcount.wasm_string
+add_this is a test
+```

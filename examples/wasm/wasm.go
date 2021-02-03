@@ -116,7 +116,7 @@ func check(e error) {
 }
 
 // End-to-end test of running an function
-func main() {
+func mainSimple() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -124,6 +124,40 @@ func main() {
 
 	// Deploy code.
 	bytecode, err := ioutil.ReadFile("../../functions/simple.wasm")
+	// c, err := p.AddFile(ctx, bytes.NewReader(bytecode), nil)
+	fnCid, err := p.Deploy(ctx, bytecode,
+		[]ipfslite.Type{
+			{Name: "string"},
+		})
+	check(err)
+
+	// Add new string as an argument.
+	argCid, err := p.AddFile(ctx, bytes.NewReader([]byte("Hello World!")), nil)
+	check(err)
+
+	// Call code
+	output, err := p.Call(ctx, *fnCid, []cid.Cid{argCid.Cid()})
+	check(err)
+	fmt.Println("Output CID: ", output)
+	// Get the manifest.
+	rsc, err := p.GetFile(ctx, *output)
+	check(err)
+	defer rsc.Close()
+	d, err := ioutil.ReadAll(rsc)
+	check(err)
+	fmt.Println("Result: ", string(d))
+
+}
+
+// End-to-end test of running an function
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := spawnPeer(ctx)
+
+	// Deploy code.
+	bytecode, err := ioutil.ReadFile("../../functions/wordcount.wasm")
 	// c, err := p.AddFile(ctx, bytes.NewReader(bytecode), nil)
 	fnCid, err := p.Deploy(ctx, bytecode,
 		[]ipfslite.Type{
