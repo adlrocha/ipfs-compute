@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -24,7 +25,9 @@ func helpcmd() {
 	fmt.Println(`[!] Commands available:
 	* addFile_<file_dir>
 	* add_<string>
-	* get_<cid> 
+	* get_<cid>
+	* abi_<cid>
+	* deploy_<bytecode>_<typeArg1>_<typeArg2>
 	* connect_<peer_multiaddr>
 	* call_<fxCid>_<argCid1>_<argCid2>
 	* exit`)
@@ -112,7 +115,8 @@ func processInput(ctx context.Context, ipfs *ipfslite.Peer, text string, done ch
 			fmt.Println("Couldn't read file: ", err)
 			return err
 		}
-		cid, err := ipfs.Deploy(ctx, bytecode)
+
+		cid, err := ipfs.AddFile(ctx, bytes.NewReader(bytecode), nil)
 		if err != nil {
 			fmt.Println("Couldn't add file to IPFS: ", err)
 			return err
@@ -121,7 +125,7 @@ func processInput(ctx context.Context, ipfs *ipfslite.Peer, text string, done ch
 
 	} else if words[0] == "add" {
 		bytecode := []byte(words[1])
-		cid, err := ipfs.Deploy(ctx, bytecode)
+		cid, err := ipfs.AddFile(ctx, bytes.NewReader(bytecode), nil)
 		if err != nil {
 			fmt.Println("Couldn't add string to IPFS: ", err)
 			return err
@@ -134,11 +138,62 @@ func processInput(ctx context.Context, ipfs *ipfslite.Peer, text string, done ch
 		c, err := cid.Decode(string(words[1]))
 		if err != nil {
 			fmt.Println("Couldn't parse CID: ", err)
+			return err
 		}
 		rsc, err := ipfs.GetFile(ctx, c)
 		d, err := ioutil.ReadAll(rsc)
 		if err != nil {
 			fmt.Println("Couldn't get file: ", err)
+			return err
+		}
+		fmt.Println("Get: ", string(d))
+
+	} else if words[0] == "abi" {
+		c, err := cid.Decode(string(words[1]))
+		if err != nil {
+			fmt.Println("Couldn't parse CID: ", err)
+			return err
+		}
+		rsc, err := ipfs.GetFile(ctx, c)
+		abi := ipfslite.FxABI{}
+		err = abi.Decode(rsc)
+		if err != nil {
+			fmt.Println("Couldn't decode ABI: ", err)
+			return err
+		}
+		fmt.Println("ABI: ", abi)
+	} else if words[0] == "deploy" {
+		bytecode, err := ioutil.ReadFile(words[1])
+		if err != nil {
+			fmt.Println("Couldn't read file: ", err)
+			return err
+		}
+		args := []ipfslite.Type{}
+		for _, k := range words[2:] {
+			args = append(args, ipfslite.Type{Name: k})
+		}
+		fmt.Println(">>", args)
+		cid, err := ipfs.Deploy(ctx, bytecode, args)
+		if err != nil {
+			fmt.Println("Couldn't deploy to IPFS: ", err)
+			return err
+		}
+		fmt.Println("Deployed function at: ", cid)
+
+	} else if words[0] == "connect" {
+		connectPeer(ctx, ipfs, words[1])
+
+	} else if words[0] == "get" {
+		c, err := cid.Decode(string(words[1]))
+		if err != nil {
+			fmt.Println("Couldn't parse CID: ", err)
+			return err
+		}
+		rsc, err := ipfs.GetFile(ctx, c)
+		d, err := ioutil.ReadAll(rsc)
+		if err != nil {
+			fmt.Println("Couldn't get file: ", err)
+			return err
 		}
 		fmt.Println("Get: ", string(d))
 
@@ -150,6 +205,7 @@ func processInput(ctx context.Context, ipfs *ipfslite.Peer, text string, done ch
 			c, err := cid.Decode(string(cs))
 			if err != nil {
 				fmt.Println("Couldn't parse CID: ", err)
+				return err
 			}
 			cids = append(cids, c)
 		}
@@ -157,6 +213,7 @@ func processInput(ctx context.Context, ipfs *ipfslite.Peer, text string, done ch
 		out, err := ipfs.Call(ctx, cids[0], cids[1:])
 		if err != nil {
 			fmt.Println("Couldn't run function: ", err)
+			return err
 		}
 		fmt.Println("Output CID: ", out.String())
 

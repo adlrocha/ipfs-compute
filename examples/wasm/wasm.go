@@ -115,73 +115,107 @@ func check(e error) {
 	}
 }
 
+// End-to-end test of running an function
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	p := spawnPeer(ctx)
-	runtime := p.Runtime()
 
 	// Deploy code.
 	bytecode, err := ioutil.ReadFile("../../functions/simple.wasm")
-	fnCid, err := p.Deploy(ctx, bytecode)
+	// c, err := p.AddFile(ctx, bytes.NewReader(bytecode), nil)
+	fnCid, err := p.Deploy(ctx, bytecode,
+		[]ipfslite.Type{
+			{Name: "string"},
+		})
 	check(err)
 
-	// Deploy cid for argument
-	argCid, err := p.Deploy(ctx, []byte("this is the arg!"))
+	// Add new string as an argument.
+	argCid, err := p.AddFile(ctx, bytes.NewReader([]byte("Hello World!")), nil)
 	check(err)
 
-	cids := append([]cid.Cid{fnCid}, argCid)
-	data := make([][]byte, 0)
-
-	// Get the required data from the network.
-	for _, c := range cids {
-		rsc, err := p.GetFile(ctx, c)
-		check(err)
-		defer rsc.Close()
-		d, err := ioutil.ReadAll(rsc)
-		check(err)
-		data = append(data, d)
-	}
-
-	module, err := wasmtime.NewModule(runtime.Engine, data[0])
-
-	instance, err := wasmtime.NewInstance(runtime, module, []*wasmtime.Extern{})
+	// Call code
+	output, err := p.Call(ctx, *fnCid, []cid.Cid{argCid.Cid()})
 	check(err)
-
-	call32 := func(f *wasmtime.Func, args ...interface{}) int32 {
-		ret, err := f.Call(args...)
-		check(err)
-		return ret.(int32)
-	}
-	memory := instance.GetExport("memory").Memory()
-	alloc := instance.GetExport("alloc").Func()
-	append := instance.GetExport("append").Func()
-
-	a := call32(alloc, 100)
-	fmt.Println(memory.Size())
-	fmt.Println(memory.DataSize())
-	buf := memory.UnsafeData()
-
-	fmt.Println("Alloc pointer: ", a)
-	input := data[1]
-	// Allocate in string
-	for i, k := range input {
-		buf[int(a)+i] = k
-	}
-
-	b := call32(append, a, len(input))
-	fmt.Println("Result: ", a)
-	fmt.Println("Output:", string(buf[a:a+b]))
-
-	// Put in the CID
-
-	// Deploy cid for argument
-	outputCid, err := p.Deploy(ctx, buf[a:a+b])
+	fmt.Println("Output CID: ", output)
+	// Get the manifest.
+	rsc, err := p.GetFile(ctx, *output)
 	check(err)
-	fmt.Println("Output CID: ", outputCid)
-
-	// After we've instantiated we can lookup our `run` function and call
-	// it.
+	defer rsc.Close()
+	d, err := ioutil.ReadAll(rsc)
+	check(err)
+	fmt.Println("Result: ", string(d))
 
 }
+
+// func testWasm() {
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
+
+// 	p := spawnPeer(ctx)
+// 	runtime := p.Runtime()
+
+// 	// Deploy code.
+// 	bytecode, err := ioutil.ReadFile("../../functions/simple.wasm")
+// 	fnCid, err := p.Deploy(ctx, bytecode)
+// 	check(err)
+
+// 	// Deploy cid for argument
+// 	argCid, err := p.Deploy(ctx, []byte("this is the arg!"))
+// 	check(err)
+
+// 	cids := append([]cid.Cid{fnCid}, argCid)
+// 	data := make([][]byte, 0)
+
+// 	// Get the required data from the network.
+// 	for _, c := range cids {
+// 		rsc, err := p.GetFile(ctx, c)
+// 		check(err)
+// 		defer rsc.Close()
+// 		d, err := ioutil.ReadAll(rsc)
+// 		check(err)
+// 		data = append(data, d)
+// 	}
+
+// 	module, err := wasmtime.NewModule(runtime.Engine, data[0])
+
+// 	instance, err := wasmtime.NewInstance(runtime, module, []*wasmtime.Extern{})
+// 	check(err)
+
+// 	call32 := func(f *wasmtime.Func, args ...interface{}) int32 {
+// 		ret, err := f.Call(args...)
+// 		check(err)
+// 		return ret.(int32)
+// 	}
+// 	memory := instance.GetExport("memory").Memory()
+// 	alloc := instance.GetExport("alloc").Func()
+// 	append := instance.GetExport("append").Func()
+
+// 	a := call32(alloc, 100)
+// 	fmt.Println(memory.Size())
+// 	fmt.Println(memory.DataSize())
+// 	buf := memory.UnsafeData()
+
+// 	fmt.Println("Alloc pointer: ", a)
+// 	input := data[1]
+// 	// Allocate in string
+// 	for i, k := range input {
+// 		buf[int(a)+i] = k
+// 	}
+
+// 	b := call32(append, a, len(input))
+// 	fmt.Println("Result: ", a)
+// 	fmt.Println("Output:", string(buf[a:a+b]))
+
+// 	// Put in the CID
+
+// 	// Deploy cid for argument
+// 	outputCid, err := p.Deploy(ctx, buf[a:a+b])
+// 	check(err)
+// 	fmt.Println("Output CID: ", outputCid)
+
+// 	// After we've instantiated we can lookup our `run` function and call
+// 	// it.
+
+// }

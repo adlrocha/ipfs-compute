@@ -12,7 +12,7 @@ use std::ptr::copy;
 pub extern "C" fn alloc(size: usize) -> *mut c_void {
     let mut buf = Vec::with_capacity(size);
     let ptr = buf.as_mut_ptr();
-    mem::forget(buf);
+    mem::forget(buf);   // This is needed to ensure that memory is freed.
     return ptr as *mut c_void;
 }
 

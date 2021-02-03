@@ -12,11 +12,14 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/fxamacker/cbor v1.5.1
+	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/ipfs/go-bitswap v0.3.3
 	github.com/ipfs/go-blockservice v0.1.4
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-datastore v0.4.5
 	github.com/ipfs/go-ds-badger v0.2.6
+	github.com/ipfs/go-ipfs-api v0.2.0
 	github.com/ipfs/go-ipfs-blockstore v1.0.3
 	github.com/ipfs/go-ipfs-chunker v0.0.5
 	github.com/ipfs/go-ipfs-config v0.11.0
@@ -28,6 +31,7 @@ require (
 	github.com/ipfs/go-log/v2 v2.1.1
 	github.com/ipfs/go-merkledag v0.3.2
 	github.com/ipfs/go-unixfs v0.2.4
+	github.com/ipld/go-ipld-prime v0.7.0
 	github.com/libp2p/go-libp2p v0.13.0
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
 	github.com/libp2p/go-libp2p-core v0.8.0
