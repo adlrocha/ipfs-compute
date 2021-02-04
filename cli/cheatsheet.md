@@ -10,6 +10,18 @@ call_bafybeidr5pcwuwabxijhaesevja6ji5y7izxy2grgvohndaz2lcdwvoh3a_bafybeifxbaroab
 ```
 
 ```
-deploy_/home/adlrocha/Desktop/main/work/ProtocolLabs/repos/ipruntime/ipfs-computation/functions/wordcount.wasm_string
-add_this is a test
+deploy_/home/adlrocha/Desktop/main/work/ProtocolLabs/repos/ipruntime/ipfs-computation/functions/wordcount.wasm_map&reduce_string
+abi_bafybeifc27yhx3fvcpwdgaclhmls5rnbyxjwcuxtqyvfhb4om6qmfds23e
+add_PL rocks!
+add_PL is the future
+call_bafybeifc27yhx3fvcpwdgaclhmls5rnbyxjwcuxtqyvfhb4om6qmfds23e_map_bafybeidz5dycov33zughiubqz3g7hcr4lxb45jv6ahz3efewwt6mrxhuh4
+get_bafybeif5eaejdudhprptqapbsdtka4e6cgbjzgkvhlcjxxvb2hx3htzs74
+call_bafybeifc27yhx3fvcpwdgaclhmls5rnbyxjwcuxtqyvfhb4om6qmfds23e_map_bafybeiggkpwijxtt4qeskuwm4vnwdzlsghxs6sz6sqg6omkd7uwr4cehya
+get_bafybeiadctogvrneetezl6mwisvd5trnpsqu2jcsz2zjehbiw7mnm4rjiq
+
+```
+
+```
+deploy_/home/adlrocha/Desktop/main/work/ProtocolLabs/repos/ipruntime/ipfs-computation/functions/wordcount.wasm_map&reduce_string
+call_bafybeifc27yhx3fvcpwdgaclhmls5rnbyxjwcuxtqyvfhb4om6qmfds23e_map_bafkreiesdy3rgsqgsk6mwha2cqw3qsuodr4lupgjxttl6zzlfqxljlspjm
 ```

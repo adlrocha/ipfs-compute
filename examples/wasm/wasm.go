@@ -125,7 +125,7 @@ func mainSimple() {
 	// Deploy code.
 	bytecode, err := ioutil.ReadFile("../../functions/simple.wasm")
 	// c, err := p.AddFile(ctx, bytes.NewReader(bytecode), nil)
-	fnCid, err := p.Deploy(ctx, bytecode,
+	fnCid, err := p.Deploy(ctx, []string{"fx"}, bytecode,
 		[]ipfslite.Type{
 			{Name: "string"},
 		})
@@ -136,7 +136,7 @@ func mainSimple() {
 	check(err)
 
 	// Call code
-	output, err := p.Call(ctx, *fnCid, []cid.Cid{argCid.Cid()})
+	output, err := p.Call(ctx, *fnCid, "fx", []cid.Cid{argCid.Cid()})
 	check(err)
 	fmt.Println("Output CID: ", output)
 	// Get the manifest.
@@ -159,27 +159,53 @@ func main() {
 	// Deploy code.
 	bytecode, err := ioutil.ReadFile("../../functions/wordcount.wasm")
 	// c, err := p.AddFile(ctx, bytes.NewReader(bytecode), nil)
-	fnCid, err := p.Deploy(ctx, bytecode,
+	fnCid, err := p.Deploy(ctx, []string{"fx"}, bytecode,
 		[]ipfslite.Type{
 			{Name: "string"},
 		})
 	check(err)
 
-	// Add new string as an argument.
-	argCid, err := p.AddFile(ctx, bytes.NewReader([]byte("Hello World!")), nil)
+	// Add a few strings to count
+	argCid1, err := p.AddFile(ctx, bytes.NewReader([]byte("Hello World!")), nil)
+	check(err)
+	argCid2, err := p.AddFile(ctx, bytes.NewReader([]byte("The World is here!")), nil)
 	check(err)
 
-	// Call code
-	output, err := p.Call(ctx, *fnCid, []cid.Cid{argCid.Cid()})
+	// Call code for arg1
+	output1, err := p.Call(ctx, *fnCid, "map", []cid.Cid{argCid1.Cid()})
 	check(err)
-	fmt.Println("Output CID: ", output)
-	// Get the manifest.
-	rsc, err := p.GetFile(ctx, *output)
+	fmt.Println("Output CID: ", output1)
+	// Get the result.
+	rsc, err := p.GetFile(ctx, *output1)
+	check(err)
+	defer rsc.Close()
+	d1, err := ioutil.ReadAll(rsc)
+	check(err)
+	fmt.Println("Result: ", string(d1))
+
+	// Call code for arg2
+	output2, err := p.Call(ctx, *fnCid, "map", []cid.Cid{argCid2.Cid()})
+	check(err)
+	fmt.Println("Output CID: ", output2)
+	// Get the result.
+	rsc, err = p.GetFile(ctx, *output2)
 	check(err)
 	defer rsc.Close()
 	d, err := ioutil.ReadAll(rsc)
 	check(err)
 	fmt.Println("Result: ", string(d))
+
+	// Reduce results from previous computations
+	output, err := p.Call(ctx, *fnCid, "reduce", []cid.Cid{*output1, *output2})
+	check(err)
+	fmt.Println("Output CID: ", output)
+	// Get the result.
+	rsc, err = p.GetFile(ctx, *output)
+	check(err)
+	defer rsc.Close()
+	d2, err := ioutil.ReadAll(rsc)
+	check(err)
+	fmt.Println("Result: ", string(d2))
 
 }
 
