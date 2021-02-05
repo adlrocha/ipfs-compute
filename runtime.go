@@ -296,11 +296,11 @@ func (p *Peer) ExecCmd(ctx context.Context, text string, done chan bool) error {
 		p.connectCmd(ctx, words[1])
 
 	} else if words[0] == "script" {
-		fmt.Println("This is still a work in progress...")
-		// err := p.RunSCript(ctx, words[1], nil)
-		// if err != nil {
-		// 	return err
-		// }
+		// fmt.Println("This is still a work in progress...")
+		err := p.RunScript(ctx, words[1])
+		if err != nil {
+			return err
+		}
 
 	} else if words[0] == "get" {
 		c, err := cid.Decode(string(words[1]))
