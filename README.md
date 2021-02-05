@@ -1,5 +1,6 @@
 # IPFS Compute: Run your CID!
 > [IPFS-lite](github.com/hsanjuan/ipfs-lite) node with an embedded WASM runtime to run your CIDs!
+
 _This is a PoC to explore the idea of computing over IPFS, do not expect production-ready code (at leas for now)._
 
 <p align="center">
